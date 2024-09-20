@@ -11,9 +11,10 @@ Reporting & Export: Ability to export visualizations and insights as PDF or imag
 
 ## Tech Stack:
 Programming Language: Python
-Libraries: Pandas, NLTK, SpaCy, Matplotlib, Plotly
+Libraries: Plotly Express
 Data Source: External API for job descriptions
-Visualization Tools: Interactive dashboards powered by Plotly/Dash or Matplotlib
+Platform/Tools: Github, VScode
+Visualization Tools: Interactive dashboards powered by Plotly Express
 
 ## How to Use:
 Clone the repository.
