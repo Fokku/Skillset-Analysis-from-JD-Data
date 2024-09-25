@@ -17,7 +17,7 @@ external_stylesheets = [
 ]
 
 # Construct Data class
-data = Data().get_cleaned_table()
+# data = Data().get_cleaned_table()
 
 # Configuring Dash instance
 
