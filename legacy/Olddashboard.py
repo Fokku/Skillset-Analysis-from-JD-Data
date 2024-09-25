@@ -18,6 +18,7 @@ data = pd.DataFrame({
 
 app = Dash(__name__)
 
+
 app.layout = html.Div(
     children=[
         html.Div(
