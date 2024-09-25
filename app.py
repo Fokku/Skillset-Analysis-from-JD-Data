@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, Input, Output, State
 import pandas as pd
 
 #Import data class
-from data.data import Data
+# from data.data import Data
 
 # Import components
 from components.Sidebar import Sidebar
