@@ -1,8 +1,8 @@
 from dash import html, dcc
 
 def Sidebar():
-    return html.Div(
-        className="flex flex-row",
+    return html.Aside(
+        className="px-10 h-full flex flex-row fixed inset-y-0 z-10 flex flex-shrink-0 w-[400px] max-h-screen overflow-hidden transition-all transform bg-white border-r shadow-lg lg:z-auto lg:static lg:shadow-none ",
         children=[
             html.Div(
                 className="flex flex-col w-max h-full py-4 px-8 items-center gap-6 bg-[#FDFDFE]",
@@ -19,7 +19,6 @@ def Sidebar():
                     )
                 ]
             ),
-            Seperator(horizontal=False),
         ]
     )
 
