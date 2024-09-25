@@ -2,7 +2,7 @@ from dash import html
 
 def ProjectHeader():
     return html.Div(
-        className="flex items-center justify-between px-4 py-4 border-b lg:py-6",
+        className="flex flex-col items-start justify-between pb-6 space-y-4 border-b lg:items-center lg:space-y-0 lg:flex-row",
         children = [
             html.Div(
                 className="flex flex-col",
