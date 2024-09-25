@@ -92,7 +92,7 @@ app.layout = html.Div(
 )
 
 # For dev
-# app.run(debug=True, port="8051")
+app.run(debug=True, port="8051")
 
 # For production
-app.run_server(debug=False)
+# app.run_server(debug=False)
