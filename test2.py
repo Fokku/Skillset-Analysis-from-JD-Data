@@ -1,108 +1,154 @@
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
-from transformers import TrainingArguments, Trainer, AutoTokenizer, AutoModelForSequenceClassification
-from sklearn.model_selection import train_test_split
-import numpy as np
+from torch.utils.data import Dataset, DataLoader
+from transformers import AutoTokenizer, pipeline
+import nltk
 
-# Load your data
-job_data = pd.read_csv('new_job.csv')
+nltk.download('punkt')
 
-# Step 1: Clean up the 'skills' column and create a mapping of unique skills
-all_skills = set()
-job_data['skills'].str.split(',').apply(all_skills.update)
+# Read the data
+JOBS_FP = 'postings.csv'
+ESCO_SKILLS_FP = 'skills_en.csv'
 
-# Create a mapping for skills to indices
-# Check the skill mapping size
-skill_mapping = {skill.strip(): idx for idx, skill in enumerate(sorted(all_skills))}
-# Manually split the combined skill string into individual skills
-corrected_skills = ['Writing skills', 'Content creation', 'SEO knowledge', 'Research skills', 'Grammar', 'Proofreading']
+df = pd.read_csv(JOBS_FP)
+esco_df = pd.read_csv(ESCO_SKILLS_FP)
 
-# Map these individual skills to valid indices
-for skill in corrected_skills:
-    if skill not in skill_mapping:
-        skill_mapping[skill] = len(skill_mapping)  # Assign new indices if they don't exist
+# Drop columns that are not needed
+df = df.drop(columns=['job_id','pay_period','company_id','views','med_salary','formatted_work_type','remote_allowed','application_url','applies','application_type','expiry','closed_time','skills_desc','posting_domain','sponsored','currency','compensation_type','zip_code','fips'])
 
-num_labels = len(skill_mapping)
+# Use only the first 5000 rows
+df = df.head(5000)
 
-# Split the data into training and testing sets
-test_split = 0.1
-train_df, test_df = train_test_split(
-    job_data,
-    test_size=test_split,
-)
+# Tokenize job descriptions
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+df['tokens'] = df['description'].apply(lambda x: tokenizer.encode(x, truncation=True, padding='max_length', max_length=512))
 
-# Encode the 'skills' column as a binary vector of length num_labels
-def encode_labels(skills_list, skill_mapping, num_labels):
-    label_vectors = []
-    for skills in skills_list:
-        label_vector = np.zeros(num_labels)
-        for skill in skills.split(','):
-            label_vector[skill_mapping[skill.strip()]] = 1
-        label_vectors.append(label_vector)
-    return label_vectors
+# Use a pre-trained model to extract skills from job descriptions
+skill_extractor = pipeline('ner', model='dslim/bert-base-NER')
+df['extracted_skills'] = df['description'].apply(lambda x: [entity['word'] for entity in skill_extractor(x) if entity['entity'].startswith('B-')])
 
-# Create encoded labels as binary vectors
-train_labels = encode_labels(train_df['skills'].tolist(), skill_mapping, num_labels)
-test_labels = encode_labels(test_df['skills'].tolist(), skill_mapping, num_labels)
-
-# Extract job descriptions
-train_texts = train_df['Job Description'].tolist()
-eval_texts = test_df['Job Description'].tolist()
-
-# Tokenize the text data
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
-
-train_encodings = tokenizer(train_texts, padding="max_length", truncation=True, max_length=512)
-eval_encodings = tokenizer(eval_texts, padding="max_length", truncation=True, max_length=512)
-
-# Custom Dataset Class for Multi-Label Classification
-class TextClassifierDataset(Dataset):
-    def __init__(self, encodings, labels):
-        self.encodings = encodings
-        self.labels = labels
+class JobDataset(Dataset):
+    def __init__(self, descriptions, skills):
+        self.descriptions = descriptions
+        self.skills = skills
 
     def __len__(self):
-        return len(self.labels)
+        return len(self.descriptions)
 
     def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        # Convert binary label vector into tensor (multi-label classification)
-        item["labels"] = torch.tensor(self.labels[idx], dtype=torch.float)
-        return item
+        return torch.tensor(self.descriptions[idx]), torch.tensor(self.skills[idx])
 
-# Prepare datasets
-train_dataset = TextClassifierDataset(train_encodings, train_labels)
-eval_dataset = TextClassifierDataset(eval_encodings, test_labels)
+# Convert extracted skills to a binary matrix
+all_skills = list(set(skill for skills in df['extracted_skills'] for skill in skills))
+skill_to_idx = {skill: idx for idx, skill in enumerate(all_skills)}
+df['skills_vector'] = df['extracted_skills'].apply(lambda skills: [1 if skill in skills else 0 for skill in all_skills])
 
-# Define the model for multi-label classification
-model = AutoModelForSequenceClassification.from_pretrained(
-    "bert-base-uncased",
-    problem_type="multi_label_classification",
-    num_labels=num_labels
-)
+# Split the data into training and validation sets
+train_df = df.iloc[:4000]
+val_df = df.iloc[4000:]
 
-# Define training arguments
-training_arguments = TrainingArguments(
-    output_dir="./results",
-    evaluation_strategy="epoch",
-    per_device_train_batch_size=8,
-    per_device_eval_batch_size=8,
-    num_train_epochs=3,
-    logging_dir="./logs",
-    logging_steps=10,
-)
+train_dataset = JobDataset(train_df['tokens'].tolist(), train_df['skills_vector'].tolist())
+val_dataset = JobDataset(val_df['tokens'].tolist(), val_df['skills_vector'].tolist())
 
-# Initialize the trainer
-trainer = Trainer(
-    model=model,
-    args=training_arguments,
-    train_dataset=train_dataset,
-    eval_dataset=eval_dataset,
-)
+train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=False)
 
-# Train the model
-trainer.train()
+import torch.nn as nn
+import torch.optim as optim
+from transformers import AutoModel
 
-# Evaluate the model
-trainer.evaluate()
+class SkillPredictor(nn.Module):
+    def __init__(self):
+        super(SkillPredictor, self).__init__()
+        self.bert = AutoModel.from_pretrained('bert-base-uncased')
+        self.fc = nn.Linear(768, len(all_skills))  # Number of skills
+
+    def forward(self, input_ids):
+        outputs = self.bert(input_ids)
+        cls_output = outputs.last_hidden_state[:, 0, :]  # CLS token output
+        skill_logits = self.fc(cls_output)
+        return skill_logits
+
+model = SkillPredictor()
+criterion = nn.BCEWithLogitsLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+num_epochs = 5
+
+for epoch in range(num_epochs):
+    model.train()
+    for descriptions, skills in train_dataloader:
+        optimizer.zero_grad()
+        outputs = model(descriptions)
+        loss = criterion(outputs, skills.float())
+        loss.backward()
+        optimizer.step()
+    print(f'Epoch {epoch+1}/{num_epochs}, Loss: {loss.item()}')
+
+# Save the trained model
+torch.save(model.state_dict(), 'skill_predictor.pth')
+
+model.eval()
+total_loss = 0
+with torch.no_grad():
+    for descriptions, skills in val_dataloader:
+        outputs = model(descriptions)
+        loss = criterion(outputs, skills.float())
+        total_loss += loss.item()
+
+print(f'Validation Loss: {total_loss / len(val_dataloader)}')
+
+# Load the trained model
+model = SkillPredictor()
+model.load_state_dict(torch.load('skill_predictor.pth'))
+model.eval()
+
+# Load the original data
+df = pd.read_csv(JOBS_FP)
+
+# Drop columns that are not needed
+df = df.drop(columns=['job_id','pay_period','company_id','views','med_salary','formatted_work_type','remote_allowed','application_url','applies','application_type','expiry','closed_time','skills_desc','posting_domain','sponsored','currency','compensation_type','zip_code','fips'])
+
+# Select the next 1000 rows (from index 4000 to 4999)
+new_df = df.iloc[4000:5000]
+
+# Tokenize new job descriptions
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+new_df['tokens'] = new_df['description'].apply(lambda x: tokenizer.encode(x, truncation=True, padding='max_length', max_length=512))
+
+# Convert tokens to tensor
+new_tokens = new_df['tokens'].tolist()
+new_tokens_tensor = torch.tensor(new_tokens)
+
+# Create a DataLoader for the new job descriptions
+new_dataset = JobDataset(new_df['tokens'].tolist(), [[0]*len(all_skills)]*len(new_df))  # Dummy skills vector
+new_dataloader = DataLoader(new_dataset, batch_size=16, shuffle=False)
+
+# Make predictions
+predicted_skills = []
+model.eval()
+with torch.no_grad():
+    for descriptions, _ in new_dataloader:
+        outputs = model(descriptions)
+        predicted_skills.append(torch.sigmoid(outputs).round().int())
+
+# Concatenate all predictions
+predicted_skills = torch.cat(predicted_skills, dim=0)
+
+# Map indices to skill names
+idx_to_skill = {idx: skill for skill, idx in skill_to_idx.items()}
+
+# Convert binary predictions to skill names
+predicted_skill_names = []
+for skill_vector in predicted_skills:
+    skills = [idx_to_skill[idx] for idx, val in enumerate(skill_vector) if val == 1]
+    predicted_skill_names.append(skills)
+
+# Add the predicted skills to the DataFrame
+new_df['predicted_skills'] = predicted_skill_names
+
+# Export the DataFrame to a JSON file
+new_df[['description', 'predicted_skills']].to_json('predicted_skills.json', orient='records', lines=True)
+
+# Print confirmation
+print("Predicted skills have been exported to 'predicted_skills.json'")
