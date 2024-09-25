@@ -26,6 +26,7 @@ app = Dash(__name__,
            external_stylesheets=external_stylesheets
            )
 
+server = app.server
 # Fake static data for now
 staticData = [
     {"title": "Total jobs", "value": "10,000"},
@@ -92,5 +93,4 @@ app.layout = html.Div(
 
 
 
-if __name__ == "__main__":
-    app.run(debug=True, port="8051")
+app.run(debug=True, port="8051")
