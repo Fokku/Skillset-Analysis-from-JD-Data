@@ -1,5 +1,6 @@
 from dash import Dash, html, dcc, Input, Output, State
 import pandas as pd
+import os
 
 #Import data class
 # from data.data import Data
@@ -26,7 +27,6 @@ app = Dash(__name__,
            external_stylesheets=external_stylesheets
            )
 
-server = app.server
 # Fake static data for now
 staticData = [
     {"title": "Total jobs", "value": "10,000"},
@@ -91,8 +91,10 @@ app.layout = html.Div(
     )
 )
 
-# For dev
-app.run(debug=True, port="8051")
+server = app.server
 
-# For production
-# app.run_server(debug=False)
+# For development only
+# app.run(debug=True)
+
+# For deployment
+app.run(debug=True, host="0.0.0.0", port=os.getenv("PORT"))

@@ -1,11 +1,11 @@
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.cluster import KMeans
-from sklearn.pipeline import make_pipeline
+# import numpy as np
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.decomposition import TruncatedSVD
+# from sklearn.cluster import KMeans
+# from sklearn.pipeline import make_pipeline
 
 from fill import fill_data
 
