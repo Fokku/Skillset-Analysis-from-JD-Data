@@ -1,4 +1,7 @@
 from dash import html, dcc
+from data.data import Data
+
+data = Data()
 
 def Sidebar():
     return html.Aside(
@@ -34,12 +37,8 @@ def FilterGroup():
             html.P("Filter by Country:"),
             # Update dropdown options
             dcc.Dropdown(
-                options=[
-                    {"label": "United States", "value": "US"},
-                    {"label": "Canada", "value": "CA"},
-                    {"label": "United Kingdom", "value": "UK"},
-                    {"label": "Australia", "value": "AU"},
-                ],
+                id = "country-filter",
+                options=[{'label': country, 'value': country} for country in data.get_country_data()],
                 value="US",
                 clearable=False,
                 multi=True

@@ -20,6 +20,12 @@ class Data:
     def get_remaining_null_cols(self):
         return self.remaining_null_cols
     
+    def get_country_data(self):
+        return self.cleaned_table['country'].unique()
+    
+    def get_industries_data(self):
+        return self.cleaned_table['industries'].unique()
+    
 
 
 # Load datasets
