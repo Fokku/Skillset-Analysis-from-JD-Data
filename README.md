@@ -40,6 +40,10 @@ Visualization Tools: Interactive dashboards powered by Plotly Express, Dash
 - Place `archive` folder into project root directory.
 - Run data cleansing scripts if needed.
 
+## TO-DO
+
+- Hide chart controls in all charts
+
 ## Footnotes:
 
 [^1]: Fill in

@@ -156,3 +156,4 @@ cython_debug/
 
 # Kaggle Datasets
 archive/
+data/cleaned_table.csv
