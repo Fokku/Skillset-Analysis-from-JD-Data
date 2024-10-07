@@ -7,11 +7,7 @@ import plotly.express as px
 # Total job industries
 # Total job skills
 
+
 def Piechart(data, values, names) -> html.Div:
     fig = px.pie(data, values=values, names=names)
-    return html.Div([
-        dcc.Graph(
-            id='piechart',
-            figure=fig
-        )
-    ])
+    return html.Div([dcc.Graph(id="piechart", figure=fig)])
