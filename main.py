@@ -18,6 +18,7 @@ from components.StaticDataCards import StaticDataCards
 from components.Seperator import Seperator
 from components.MultiLineChart import MultiLineChart, InteractiveMultiLineChart
 from components.Barchart import BarChart
+from components.WordCloud import WordCloudLayout # NEED TO 'pip install wordcloud' to use this
 
 external_scripts = [
     {"src": "https://cdn.tailwindcss.com"},
@@ -110,6 +111,7 @@ def MainSection():
                     InteractiveMultiLineChart(
                         Title="Interactive Skillset Demand Over Time (Select Skills)"
                     ),
+                    WordCloudLayout(Title="Most Skill Needed"),
                 ],
             ),
         ],
@@ -138,7 +140,7 @@ def MainSectionGeneralView():
                         id="top-10-companies-job-postings",
                         Title="Top 10 Companies by Job Postings",
                     ),
-                    dcc.Graph(
+                    WordCloudLayout(
                         id="top-10-countries-jobs-postings",
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
@@ -419,6 +421,23 @@ def update_charts(selected_countries, selected_industries):
         f"{total_skills:,}",
         [{"label": skill, "value": skill} for skill in skills_list],
     )
+
+# TODO: Added WordCloudLayout component
+# Update wordcloud
+@app.callback(
+    Output("wordcloud", "children"),
+    [Input("industry-filter", "value")],
+)
+
+def update_wordcloud(selected_industries):
+    # Get the skill frequencies from the Data class based on selected industries
+    if selected_industries:
+        skill_frequencies = data.get_skill_frequencies(selected_industries)
+    else:
+        skill_frequencies = None  # No industries selected
+
+    # Generate and return the WordCloud layout (handles both cases)
+    return WordCloudLayout(skill_frequencies, id="wordcloud")
 
 # TODO: Fix sidebar toggle
 
