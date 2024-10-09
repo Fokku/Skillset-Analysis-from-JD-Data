@@ -18,6 +18,7 @@ from components.StaticDataCards import StaticDataCards
 from components.Seperator import Seperator
 from components.MultiLineChart import MultiLineChart, InteractiveMultiLineChart
 from components.Barchart import BarChart
+from components.WordCloud import WordCloud
 
 external_scripts = [
     {"src": "https://cdn.tailwindcss.com"},
@@ -141,14 +142,19 @@ def MainSectionGeneralView():
                     BarChart(
                         id="top-10-companies-job-postings",
                         Title="Top 10 Companies by Job Postings",
-                        fig={
+                        figure={
                             'data': [{
                                 'type': 'bar',
                                 'x': cleaned_data['company_name'].value_counts().nlargest(10).index,
                                 'y': cleaned_data['company_name'].value_counts().nlargest(10).values
                             }],
                             'layout': {
-                                'title': 'Top 10 Companies by Job Postings',
+                                'title': [
+                                    html.H1(
+                                        className="text-xl text-center font-semibold text-slate-800",
+                                        children="Top 10 Companies by Job Postings",
+                                    ),
+                                ],
                                 'xaxis': {'title': 'Company'},
                                 'yaxis': {'title': 'Number of Job Postings'}
                             }
@@ -275,6 +281,11 @@ def MainSectionGeneralView():
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
+                    WordCloud(
+                        data=cleaned_data['skill_name'].value_counts().nlargest(100).to_dict(),
+                        Title="Most In-Demand Skills",
+                        id="most-skills-wordcloud",
+                    )
                 ],
             )
         ],

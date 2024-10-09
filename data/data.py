@@ -3,14 +3,6 @@ import os
 import numpy as np
 from datetime import datetime, timedelta
 
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# from sklearn.feature_extraction.text import TfidfVectorizer
-# from sklearn.decomposition import TruncatedSVD
-# from sklearn.cluster import KMeans
-# from sklearn.pipeline import make_pipeline
-
 if os.getenv("DEV"):
     cacheExists = False
     archiveExists = False
@@ -46,6 +38,12 @@ class Data:
 
     def get_skills_list(self):
         return self.cleaned_table["skill_name"].dropna().unique().tolist()
+    
+    def get_skill_frequencies(self, selected_industries):
+        # Logic to compute skill frequencies based on industries
+        filtered_data = self.cleaned_table[self.cleaned_table['industry_name'].isin(selected_industries)]
+        skill_frequencies = filtered_data['skill_name'].value_counts()
+        return skill_frequencies.to_dict()
 
 
 rows_not_needed = [
