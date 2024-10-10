@@ -61,7 +61,7 @@ staticData = [
 ]
 
 
-def filter_data(df, selected_countries, selected_industries, **kwargs):
+def filter_data(df, selected_countries, selected_industries, selected_skills=None):
     filtered_df = df
 
     if selected_countries:
@@ -76,9 +76,9 @@ def filter_data(df, selected_countries, selected_industries, **kwargs):
             filtered_df["industry_name"].isin(selected_industries)
         ]
 
-    if kwargs.get("selected_skills"):
-        if isinstance(kwargs.get("selected_skills"), str):
-            selected_skills = [kwargs.get("selected_skills")]
+    if selected_skills:
+        if isinstance(selected_skills, str):
+            selected_skills = [selected_skills]
         filtered_df = filtered_df[filtered_df["skill_name"].isin(selected_skills)]
 
     return filtered_df
@@ -402,7 +402,7 @@ def update_pie_charts(selected_countries, selected_industries):
     return job_fig, companies_fig, industries_fig, skills_fig
 
 
-# Update time-series chart
+# Update time-series charts
 @app.callback(
     [
         Output("interactive-skills-over-time-chart", "figure"),
@@ -415,18 +415,18 @@ def update_pie_charts(selected_countries, selected_industries):
     ],
 )
 def update_time_series_charts(selected_countries, selected_industries, selected_skills):
+    # Filter data based on country and industry
     filtered_df = filter_data(
         cleaned_data,
         selected_countries,
         selected_industries,
-        selected_skills=selected_skills,
     )
 
     # Convert and filter dates
     filtered_df = convert_to_datetime(filtered_df, "original_listed_time")
     filtered_df = filter_recent_dates(filtered_df, "listed_date", days=210)
 
-    # Create multi-line chart for skillset requirements over time
+    # Create multi-line chart for top 5 skillset requirements over time
     skills_over_time, top_5_skills = group_by_time_and_skill(
         filtered_df, "listed_date", "skill_name"
     )
@@ -458,15 +458,26 @@ def update_time_series_charts(selected_countries, selected_industries, selected_
 
     # Create interactive skills chart
     if selected_skills:
+        # Filter data again, this time including the selected skills
+        interactive_filtered_df = filter_data(
+            filtered_df,
+            selected_countries,
+            selected_industries,
+            selected_skills=selected_skills,
+        )
+        interactive_skills_over_time, _ = group_by_time_and_skill(
+            interactive_filtered_df, "listed_date", "skill_name"
+        )
         interactive_skills = selected_skills
     else:
+        interactive_skills_over_time = skills_over_time
         interactive_skills = top_5_skills
 
     interactive_skills_fig = {
         "data": [
             {
-                "x": skills_over_time.index,
-                "y": skills_over_time[skill],
+                "x": interactive_skills_over_time.index,
+                "y": interactive_skills_over_time[skill],
                 "type": "scatter",
                 "mode": "lines",
                 "name": skill,
