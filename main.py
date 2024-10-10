@@ -149,12 +149,7 @@ def MainSectionGeneralView():
                                 'y': cleaned_data['company_name'].value_counts().nlargest(10).values
                             }],
                             'layout': {
-                                'title': [
-                                    html.H1(
-                                        className="text-xl text-center font-semibold text-slate-800",
-                                        children="Top 10 Companies by Job Postings",
-                                    ),
-                                ],
+                                'title': 'Top 10 Companies by Job Postings',
                                 'xaxis': {'title': 'Company'},
                                 'yaxis': {'title': 'Number of Job Postings'}
                             }
@@ -219,6 +214,46 @@ def MainSectionGeneralView():
                                     }],
                                     'layout': {
                                         'title': 'Distribution of Job Postings by Experience Level'
+                                    }
+                                },
+                                className="w-full h-[300px]",
+                                config={"displayModeBar": False},
+                            ),
+                        ]
+                    ),
+                    html.Div(
+                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
+                        children=[
+                            dcc.Graph(
+                                id="distribution of job postings by industry",
+                                figure={
+                                    'data': [{
+                                        'type': 'pie',
+                                        'labels': cleaned_data['industry_name'].value_counts().nlargest(10).index,
+                                        'values': cleaned_data['industry_name'].value_counts().nlargest(10).values
+                                    }],
+                                    'layout': {
+                                        'title': 'Top 10 Distribution of Job Postings by Industry'
+                                    }
+                                },
+                                className="w-full h-[300px]",
+                                config={"displayModeBar": False},
+                            ),
+                        ]
+                    ),
+                    html.Div(
+                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
+                        children=[
+                            dcc.Graph(
+                                id="distribution of job postings by work type",
+                                figure={
+                                    'data': [{
+                                        'type': 'pie',
+                                        'labels': cleaned_data['formatted_work_type'].value_counts().index,
+                                        'values': cleaned_data['formatted_work_type'].value_counts().values
+                                    }],
+                                    'layout': {
+                                        'title': 'Distribution of Job Postings by Work Type'
                                     }
                                 },
                                 className="w-full h-[300px]",
