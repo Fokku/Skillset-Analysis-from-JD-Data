@@ -18,6 +18,7 @@ from components.StaticDataCards import StaticDataCards
 from components.Seperator import Seperator
 from components.MultiLineChart import MultiLineChart, InteractiveMultiLineChart
 from components.Barchart import BarChart
+from components.WordCloud import WordCloud
 
 external_scripts = [
     {"src": "https://cdn.tailwindcss.com"},
@@ -115,7 +116,7 @@ def MainSection():
         ],
     )
 
-
+# Add your graph components here
 def MainSectionGeneralView():
     return html.Div(
         id="general-view",
@@ -131,48 +132,160 @@ def MainSectionGeneralView():
                                 className="text-lg text-center font-semibold text-slate-600",
                                 children="General View",
                             ),
+                            html.P(
+                                className="text-sm text-center text-slate-600",
+                                children="General view of the data, showing the distribution of job postings, companies, industries, and skills across the entire dataset.",
+                            ),
                             Seperator(className="my-2"),
                         ],
                     ),
                     BarChart(
                         id="top-10-companies-job-postings",
                         Title="Top 10 Companies by Job Postings",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data['company_name'].value_counts().nlargest(10).index,
+                                'y': cleaned_data['company_name'].value_counts().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': [
+                                    html.H1(
+                                        className="text-xl text-center font-semibold text-slate-800",
+                                        children="Top 10 Companies by Job Postings",
+                                    ),
+                                ],
+                                'xaxis': {'title': 'Company'},
+                                'yaxis': {'title': 'Number of Job Postings'}
+                            }
+                        },
                     ),
                     dcc.Graph(
                         id="top-10-countries-jobs-postings",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data['country'].value_counts().nlargest(10).index,
+                                'y': cleaned_data['country'].value_counts().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Countries by Job Postings',
+                                'xaxis': {'title': 'Country'},
+                                'yaxis': {'title': 'Number of Job Postings'}
+                            }
+                        },
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
                     dcc.Graph(
                         id="salary-distribution-exp-level",
+                        figure={
+                            'data': [
+                                {
+                                    'type': 'box',
+                                    'y': cleaned_data[cleaned_data['formatted_experience_level'] == level]['normalized_salary'],
+                                    'name': level
+                                } for level in cleaned_data['formatted_experience_level'].unique()
+                            ],
+                            'layout': {
+                                'title': 'Salary Distribution by Experience Level',
+                                'yaxis': {'title': 'Normalized Salary'},
+                                'xaxis': {'title': 'Experience Level'}
+                            }
+                        },
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
                     dcc.Graph(
                         id="distribution of job postings by exp level",
+                        figure={
+                            'data': [{
+                                'type': 'pie',
+                                'labels': cleaned_data['formatted_experience_level'].value_counts().index,
+                                'values': cleaned_data['formatted_experience_level'].value_counts().values
+                            }],
+                            'layout': {
+                                'title': 'Distribution of Job Postings by Experience Level'
+                            }
+                        },
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
                     dcc.Graph(
                         id="salary distribution by country",
+                        figure={
+                            'data': [
+                                {
+                                    'type': 'box',
+                                    'y': cleaned_data[cleaned_data['country'] == country]['normalized_salary'],
+                                    'name': country
+                                } for country in cleaned_data['country'].value_counts().nlargest(10).index
+                            ],
+                            'layout': {
+                                'title': 'Salary Distribution by Top 10 Countries',
+                                'yaxis': {'title': 'Normalized Salary'},
+                                'xaxis': {'title': 'Country'}
+                            }
+                        },
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
                     dcc.Graph(
                         id="Top 10 Highest Paying Industries based on Median Salary",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data.groupby('industry_name')['normalized_salary'].median().nlargest(10).index,
+                                'y': cleaned_data.groupby('industry_name')['normalized_salary'].median().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Highest Paying Industries (Median Salary)',
+                                'xaxis': {'title': 'Industry'},
+                                'yaxis': {'title': 'Median Normalized Salary'}
+                            }
+                        },
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
                     dcc.Graph(
                         id="Top 10 Highest Paying Companies based on Median Salary",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data.groupby('company_name')['normalized_salary'].median().nlargest(10).index,
+                                'y': cleaned_data.groupby('company_name')['normalized_salary'].median().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Highest Paying Companies (Median Salary)',
+                                'xaxis': {'title': 'Company'},
+                                'yaxis': {'title': 'Median Normalized Salary'}
+                            }
+                        },
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
                     dcc.Graph(
                         id="Top 10 most in-demand skills across all industries",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data['skill_name'].value_counts().nlargest(10).index,
+                                'y': cleaned_data['skill_name'].value_counts().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Most In-Demand Skills',
+                                'xaxis': {'title': 'Skill'},
+                                'yaxis': {'title': 'Number of Job Postings'}
+                            }
+                        },
                         className="w-full h-[300px]",
                         config={"displayModeBar": False},
                     ),
+                    WordCloud(
+                        data=cleaned_data['skill_name'].value_counts().nlargest(100).to_dict(),
+                        Title="Most In-Demand Skills",
+                        id="most-skills-wordcloud",
+                    )
                 ],
             )
         ],
@@ -333,12 +446,11 @@ def update_time_series_charts(selected_countries, selected_industries, selected_
         "layout": {
             "title": "Top 5 Skills Over Time",
             "xaxis": {
-                "title": "Date",
                 "tickformat": "%Y-%m-%d",
                 "tickangle": 45,
             },
             "yaxis": {"title": "Skill Mentions"},
-            "legend": {"orientation": "h", "y": -0.2},
+            "legend": {"orientation": "h", "y": -0.5},
             "hovermode": "closest",
             "margin": {"b": 100, "t": 30, "l": 60, "r": 30},
         },
@@ -365,12 +477,11 @@ def update_time_series_charts(selected_countries, selected_industries, selected_
         "layout": {
             "title": "Interactive Skills Over Time",
             "xaxis": {
-                "title": "Date",
                 "tickformat": "%Y-%m-%d",
                 "tickangle": 45,
             },
             "yaxis": {"title": "Skill Mentions"},
-            "legend": {"orientation": "h", "y": -0.2},
+            "legend": {"orientation": "h", "y": -0.5},
             "hovermode": "closest",
             "margin": {"b": 100, "t": 30, "l": 60, "r": 30},
         },

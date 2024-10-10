@@ -20,7 +20,7 @@ def Sidebar():
                     ),
                     Seperator(),
                     html.Div(className="filter-options", children=[FilterGroup()]),
-                    #Button that hovers in the vertical center of the sidebar, lingering over the edge of the side. It will be used to toggle the sidebar
+                    # Toggle Sidebar Button
                     # html.Button(
                     #     className="ml-[120%] z-20 size-10 bg-black text-white rounded-full flex items-center justify-center",
                     #     children="<",
@@ -79,6 +79,7 @@ def FilterGroup():
                 multi=True,  # Set to False if you want only single selection
                 placeholder="Select industries",
             ),
+            
             html.P("Toggle general view"),
             ToggleSwitch()[0],
         ],
