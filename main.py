@@ -393,10 +393,7 @@ def update_pie_charts(selected_countries, selected_industries):
 
 # Update time-series charts
 @app.callback(
-    [
-        Output("interactive-skills-over-time-chart", "figure"),
-        # Output("skills-over-time-chart", "figure"),
-    ],
+    Output("interactive-skills-over-time-chart", "figure"),
     [
         Input("country-filter", "value"),
         Input("industry-filter", "value"),
@@ -404,7 +401,6 @@ def update_pie_charts(selected_countries, selected_industries):
     ],
 )
 def update_time_series_charts(selected_countries, selected_industries, selected_skills):
-    # Filter data based on country and industry
     filtered_df = filter_data(
         cleaned_data,
         selected_countries,
@@ -415,79 +411,44 @@ def update_time_series_charts(selected_countries, selected_industries, selected_
     filtered_df = convert_to_datetime(filtered_df, "original_listed_time")
     filtered_df = filter_recent_dates(filtered_df, "listed_date", days=210)
 
-    # Create multi-line chart for top 5 skillset requirements over time
+    # Create multi-line chart for skillset requirements over time
     skills_over_time, top_5_skills = group_by_time_and_skill(
         filtered_df, "listed_date", "skill_name"
     )
 
-    # skills_over_time_fig = {
-    #     "data": [
-    #         {
-    #             "x": skills_over_time.index,
-    #             "y": skills_over_time[skill],
-    #             "type": "scatter",
-    #             "mode": "lines",
-    #             "name": skill,
-    #             "line": {"shape": "linear", "smoothing": 0.4},
-    #         }
-    #         for skill in top_5_skills
-    #     ],
-    #     "layout": {
-    #         "title": "Top 5 Skills Over Time",
-    #         "xaxis": {
-    #             "tickformat": "%Y-%m-%d",
-    #             "tickangle": 45,
-    #         },
-    #         "yaxis": {"title": "Skill Mentions"},
-    #         "legend": {"orientation": "h", "y": -0.5},
-    #         "hovermode": "closest",
-    #         "margin": {"b": 100, "t": 30, "l": 60, "r": 30},
-    #     },
-    # }
-
     # Create interactive skills chart
-    if selected_skills:
-        # Filter data again, this time including the selected skills
-        interactive_filtered_df = filter_data(
-            filtered_df,
-            selected_countries,
-            selected_industries,
-            selected_skills=selected_skills,
-        )
-        interactive_skills_over_time, _ = group_by_time_and_skill(
-            interactive_filtered_df, "listed_date", "skill_name"
-        )
+    if selected_skills and len(selected_skills) > 0:
         interactive_skills = selected_skills
     else:
-        interactive_skills_over_time = skills_over_time
         interactive_skills = top_5_skills
 
     interactive_skills_fig = {
         "data": [
             {
-                "x": interactive_skills_over_time.index,
-                "y": interactive_skills_over_time[skill],
+                "x": skills_over_time.index,
+                "y": skills_over_time[skill],
                 "type": "scatter",
                 "mode": "lines",
                 "name": skill,
                 "line": {"shape": "linear", "smoothing": 0.4},
-                "animation_frame": "listed_date"
             }
-            for skill in interactive_skills
+            for skill in interactive_skills if skill in skills_over_time.columns
         ],
         "layout": {
+            "title": "Interactive Skills Over Time",
             "xaxis": {
+                "title": "Date",
                 "tickformat": "%Y-%m-%d",
                 "tickangle": 45,
             },
             "yaxis": {"title": "Skill Mentions"},
-            "legend": {"orientation": "h", "y": -0.5},
+            "legend": {"orientation": "h", "y": -0.2},
             "hovermode": "closest",
-            "margin": {"b": 100, "t": 30, "l": 60, "r": 30}
+            "margin": {"b": 100, "t": 30, "l": 60, "r": 30},
         },
     }
 
-    return interactive_skills_fig, #skills_over_time_fig
+    return interactive_skills_fig
 
 
 # Update bar chart, multi-line chart, and other data
