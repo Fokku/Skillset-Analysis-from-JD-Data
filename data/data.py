@@ -48,7 +48,6 @@ class Data:
 
 rows_not_needed = [
     "pay_period",
-    "remote_allowed",
     "job_posting_url",
     "application_url",
     "application_type",
@@ -57,11 +56,9 @@ rows_not_needed = [
     "sponsored",
     "currency",
     "compensation_type",
-    "zip_code_x",
     "fips",
     "inferred",
     "state",
-    "zip_code_y",
     "address",
     "url",
     "industry_id",
@@ -356,6 +353,7 @@ if not os.path.exists("data/cleaned_table.csv"):
             ),
             "employee_count": np.random.randint(10, 100000, num_rows),
             "follower_count": np.random.randint(0, 1000000, num_rows),
+            "remote_allowed": np.random.choice([True, False], num_rows),
         }
 
         cleaned_table = pd.DataFrame(fake_data)

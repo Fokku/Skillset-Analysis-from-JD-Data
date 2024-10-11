@@ -21,7 +21,7 @@ def MultiLineChart(Title="Skillset Requirements Over Time"):
     )
 
 
-def InteractiveMultiLineChart(Title="Skillset Requirements Over Time"):
+def InteractiveMultiLineChart(Title="Skillset Requirements Over Time", id="interactive-skills-over-time-chart"):
     return html.Div(
         className="col-span-2 p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
         children=[
@@ -46,9 +46,10 @@ def InteractiveMultiLineChart(Title="Skillset Requirements Over Time"):
                 ],
             ),
             dcc.Graph(
-                id="interactive-skills-over-time-chart",
+                id=id,
                 className="w-full h-[300px]",
                 config={"displayModeBar": False},
+                animate=True,
             ),
         ],
     )

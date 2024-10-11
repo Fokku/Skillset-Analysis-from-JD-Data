@@ -12,11 +12,13 @@
   "formatted_work_type": "Full-time",
   "applies": 2.0,
   "original_listed_time": 1713397508000.0,
+  "remote_allowed": "Unknown",
   "formatted_experience_level": "Not Specified",
   "skills_desc": "Requirements: \n\nWe are seeking a College or Graduate Student (can also be completed with school) with a focus in Planning, Architecture, Real Estate Development or Management or General Business. Must be able to work in an extremely fast paced environment and able to multitask and prioritize.",
   "listed_time": 1713397508000.0,
   "work_type": "FULL_TIME",
   "normalized_salary": 38480.0,
+  "zip_code_x": 8540.0,
   "type": "Not Specified",
   "industry_name": "Real Estate",
   "skill_name": "Marketing",
@@ -25,6 +27,7 @@
   "company_size": 2.0,
   "country": "US",
   "city": "Jersey City",
+  "zip_code_y": "07302",
   "employee_count": 402.0,
   "follower_count": 2351.0
 }
