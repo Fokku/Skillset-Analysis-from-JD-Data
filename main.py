@@ -23,6 +23,7 @@ from components.MultiLineChart import MultiLineChart, InteractiveMultiLineChart
 from components.Barchart import BarChart
 from components.Piechart import Piechart
 from components.WordCloud import WordCloud
+from components.Boxchart import Boxchart
 
 external_scripts = [
     {"src": "https://cdn.tailwindcss.com"},
@@ -114,7 +115,6 @@ def MainSectionGeneralView():
                     ),
                     BarChart(
                         id="top-10-companies-job-postings",
-                        Title="Top 10 Companies by Job Postings",
                         figure={
                             'data': [{
                                 'type': 'bar',
@@ -128,209 +128,137 @@ def MainSectionGeneralView():
                             }
                         },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="top-10-countries-jobs-postings",
-                                figure={
-                                    'data': [{
-                                        'type': 'bar',
-                                        'x': cleaned_data['country'].value_counts().nlargest(10).index,
-                                        'y': cleaned_data['country'].value_counts().nlargest(10).values
-                                    }],
-                                    'layout': {
-                                        'title': 'Top 10 Countries by Job Postings',
-                                        'xaxis': {'title': 'Country'},
-                                        'yaxis': {'title': 'Number of Job Postings'}
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+                    Boxchart(
+                        id="salary-distribution-exp-level",
+                        description="Distribution of salaries by experience level",
+                        figure={
+                            'data': [
+                                {
+                                    'type': 'box',
+                                    'y': cleaned_data[cleaned_data['formatted_experience_level'] == level]['normalized_salary'],
+                                    'name': level
+                                } for level in cleaned_data['formatted_experience_level'].unique()
+                            ],
+                            'layout': {
+                                'title': 'Salary Distribution by Experience Level',
+                                'yaxis': {'title': 'Normalized Salary'},
+                                'xaxis': {'title': 'Experience Level'}
+                            }
+                        },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="salary-distribution-exp-level",
-                                figure={
-                                    'data': [
-                                        {
-                                            'type': 'box',
-                                            'y': cleaned_data[cleaned_data['formatted_experience_level'] == level]['normalized_salary'],
-                                            'name': level
-                                        } for level in cleaned_data['formatted_experience_level'].unique()
-                                    ],
-                                    'layout': {
-                                        'title': 'Salary Distribution by Experience Level',
-                                        'yaxis': {'title': 'Normalized Salary'},
-                                        'xaxis': {'title': 'Experience Level'}
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+                    Piechart(
+                        id="distribution-of-job-postings-by-exp-level-pie",
+                        figure={
+                            'data': [{
+                                'type': 'pie',
+                                'labels': cleaned_data['formatted_experience_level'].value_counts().index,
+                                'values': cleaned_data['formatted_experience_level'].value_counts().values
+                            }],
+                            'layout': {
+                                'title': 'Distribution of Job Postings by Experience Level'
+                            }
+                        },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="distribution of job postings by exp level",
-                                figure={
-                                    'data': [{
-                                        'type': 'pie',
-                                        'labels': cleaned_data['formatted_experience_level'].value_counts().index,
-                                        'values': cleaned_data['formatted_experience_level'].value_counts().values
-                                    }],
-                                    'layout': {
-                                        'title': 'Distribution of Job Postings by Experience Level'
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+                    Piechart(
+                        id="distribution-of-job-postings-by-industry-pie",
+                        figure={
+                            'data': [{
+                                'type': 'pie',
+                                'labels': cleaned_data['industry_name'].value_counts().nlargest(10).index,
+                                'values': cleaned_data['industry_name'].value_counts().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Distribution of Job Postings by Industry'
+                            }
+                        },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="distribution of job postings by industry",
-                                figure={
-                                    'data': [{
-                                        'type': 'pie',
-                                        'labels': cleaned_data['industry_name'].value_counts().nlargest(10).index,
-                                        'values': cleaned_data['industry_name'].value_counts().nlargest(10).values
-                                    }],
-                                    'layout': {
-                                        'title': 'Top 10 Distribution of Job Postings by Industry'
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+                    
+                    Piechart(
+                        id="distribution-of-job-postings-by-work-type-pie",
+                        figure={
+                            'data': [{
+                                'type': 'pie',
+                                'labels': cleaned_data['formatted_work_type'].value_counts().index,
+                                'values': cleaned_data['formatted_work_type'].value_counts().values
+                            }],
+                            'layout': {
+                                'title': 'Distribution of Job Postings by Work Type'
+                            }
+                        },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="distribution of job postings by work type",
-                                figure={
-                                    'data': [{
-                                        'type': 'pie',
-                                        'labels': cleaned_data['formatted_work_type'].value_counts().index,
-                                        'values': cleaned_data['formatted_work_type'].value_counts().values
-                                    }],
-                                    'layout': {
-                                        'title': 'Distribution of Job Postings by Work Type'
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+
+                    Boxchart(
+                        id="salary-distribution-country",
+                        description="Distribution of salaries by country",
+                        figure={
+                            'data': [
+                                {
+                                    'type': 'box',
+                                    'y': cleaned_data[cleaned_data['country'] == country]['normalized_salary'],
+                                    'name': country
+                                } for country in cleaned_data['country'].value_counts().nlargest(10).index
+                            ],
+                            'layout': {
+                                'title': 'Salary Distribution by Top 10 Countries',
+                                'yaxis': {'title': 'Normalized Salary'},
+                                'xaxis': {'title': 'Country'}
+                            }
+                        },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="salary distribution by country",
-                                figure={
-                                    'data': [
-                                        {
-                                            'type': 'box',
-                                            'y': cleaned_data[cleaned_data['country'] == country]['normalized_salary'],
-                                            'name': country
-                                        } for country in cleaned_data['country'].value_counts().nlargest(10).index
-                                    ],
-                                    'layout': {
-                                        'title': 'Salary Distribution by Top 10 Countries',
-                                        'yaxis': {'title': 'Normalized Salary'},
-                                        'xaxis': {'title': 'Country'}
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+                    BarChart(
+                        id="top-10-highest-paying-industries-bar",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data.groupby('industry_name')['normalized_salary'].median().nlargest(10).index,
+                                'y': cleaned_data.groupby('industry_name')['normalized_salary'].median().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Highest Paying Industries (Median Salary)',
+                                'xaxis': {'title': 'Industry'},
+                                'yaxis': {'title': 'Median Normalized Salary'}
+                            }
+                        },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="Top 10 Highest Paying Industries based on Median Salary",
-                                figure={
-                                    'data': [{
-                                        'type': 'bar',
-                                        'x': cleaned_data.groupby('industry_name')['normalized_salary'].median().nlargest(10).index,
-                                        'y': cleaned_data.groupby('industry_name')['normalized_salary'].median().nlargest(10).values
-                                    }],
-                                    'layout': {
-                                        'title': 'Top 10 Highest Paying Industries (Median Salary)',
-                                        'xaxis': {'title': 'Industry'},
-                                        'yaxis': {'title': 'Median Normalized Salary'}
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+                    BarChart(
+                        id="top-10-highest-paying-companies-bar",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data.groupby('company_name')['normalized_salary'].median().nlargest(10).index,
+                                'y': cleaned_data.groupby('company_name')['normalized_salary'].median().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Highest Paying Companies (Median Salary)',
+                                'xaxis': {'title': 'Company'},
+                                'yaxis': {'title': 'Median Normalized Salary'}
+                            }
+                        },
                     ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="Top 10 Highest Paying Companies based on Median Salary",
-                                figure={
-                                    'data': [{
-                                        'type': 'bar',
-                                        'x': cleaned_data.groupby('company_name')['normalized_salary'].median().nlargest(10).index,
-                                        'y': cleaned_data.groupby('company_name')['normalized_salary'].median().nlargest(10).values
-                                    }],
-                                    'layout': {
-                                        'title': 'Top 10 Highest Paying Companies (Median Salary)',
-                                        'xaxis': {'title': 'Company'},
-                                        'yaxis': {'title': 'Median Normalized Salary'}
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
-                    ),
-                    html.Div(
-                        className="p-4 transition-shadow border rounded-lg shadow-sm hover:shadow-lg",
-                        children=[
-                            dcc.Graph(
-                                id="Top 10 most in-demand skills across all industries",
-                                figure={
-                                    'data': [{
-                                        'type': 'bar',
-                                        'x': cleaned_data['skill_name'].value_counts().nlargest(10).index,
-                                        'y': cleaned_data['skill_name'].value_counts().nlargest(10).values
-                                    }],
-                                    'layout': {
-                                        'title': 'Top 10 Most In-Demand Skills',
-                                        'xaxis': {'title': 'Skill'},
-                                        'yaxis': {'title': 'Number of Job Postings'}
-                                    }
-                                },
-                                className="w-full h-[300px]",
-                                config={"displayModeBar": False},
-                            ),
-                        ]
+
+                    BarChart(
+                        id="top-10-most-in-demand-skills-bar",
+                        figure={
+                            'data': [{
+                                'type': 'bar',
+                                'x': cleaned_data['skill_name'].value_counts().nlargest(10).index,
+                                'y': cleaned_data['skill_name'].value_counts().nlargest(10).values
+                            }],
+                            'layout': {
+                                'title': 'Top 10 Most In-Demand Skills',
+                                'xaxis': {'title': 'Skill'},
+                                'yaxis': {'title': 'Number of Job Postings'}
+                            }
+                        },
                     ),
                     # WordCloud(
                     #     data=cleaned_data['skill_name'].value_counts().nlargest(100).to_dict(),
                     #     Title="Most In-Demand Skills",
                     #     id="most-skills-wordcloud",
                     # ),
-                    dcc.Graph(
+                    Boxchart(
                         id="salary-distribution-job-roles",
+                        description="Distribution of salaries by top 10 job roles",
                         figure={
                             'data': [
                                 {
@@ -347,8 +275,6 @@ def MainSectionGeneralView():
                                 'showlegend': False
                             }
                         },
-                        className="w-full h-[400px]",
-                        config={"displayModeBar": False},
                     ),
                 ],
             )
