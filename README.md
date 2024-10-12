@@ -13,9 +13,6 @@ User Filters: Allow users to explore data based on industry, job level, and regi
 
 ## Tech Stack:
 
-> [!IMPORTANT]
-> Update later.
-
 Language: Python
 Libraries: NTLK, Plotly, Dash, Pandas
 Data Source: Kaggle
@@ -35,10 +32,15 @@ Visualization Tools: Interactive dashboards powered by Plotly Express, Dash
   pip install -r requirements.txt
   ```
 
-- Configure API credentials in `.env` file.
 - Download [Linkedin Job Dataset from Kaggle] (https://www.kaggle.com/datasets/arshkon/linkedin-job-postings).
 - Place `archive` folder into project root directory.
 - Run data cleansing scripts if needed.
+
+> [!IMPORTANT]
+> If the archive folder is not detected, random data will be generated instead.
+> In the case of a server deployment, data will be randomly generated as the dataset is too large to be hosted without paid options.
+
+## TO-DO
 
 ## Footnotes:
 
