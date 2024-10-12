@@ -362,6 +362,7 @@ def extract_skills(
     return pred_labels, res
 
 
+# Define the function to aggregate overlapping spans
 def aggregate_span(results):
     new_results = []
     current_result = results[0]
@@ -378,7 +379,7 @@ def aggregate_span(results):
 
     return new_results
 
-
+# Define the function to perform NER on a given text
 def ner(text, token_skill_classifier, token_knowledge_classifier):
     output_skills = token_skill_classifier(text)
     for result in output_skills:
@@ -402,12 +403,11 @@ def ner(text, token_skill_classifier, token_knowledge_classifier):
     skills.extend(output_knowledge)
     return {"text": text, "entities": skills}
 
-
+# Define the function to compute similarity between a vector and ESCO embeddings
 def process_sentence(sent):
     emb = get_embedding(sent)
     return compute_similarity_opt(emb, emb_label)
-
-
+# Define the function to compute similarity between a vector and ESCO embeddings
 def extract_and_store_skills(row):
     description = row["description"]
     pred_labels, res = extract_skills(description, tsc, tkc)
@@ -417,8 +417,7 @@ def extract_and_store_skills(row):
         skill_info[1] for skill_info in res
     ]  # skill_info[1] is the ESCO skill name
     return extracted_skills
-
-
+# Define the function to extract skills for each row
 tokenizer = AutoTokenizer.from_pretrained(backbone)
 model = BertModel(backbone)
 model.to(device)
@@ -464,6 +463,13 @@ df_subset = df  # Use .copy() to avoid the SettingWithCopyWarning
 
 # Apply the function to store skills in the 'skills' column using .loc[]
 df_subset.loc[:, "skills"] = df_subset.apply(extract_and_store_skills, axis=1)
+
+def predict_skills(data):
+    #Load the pandas dataframa
+    df = data
+    df.loc[:, 'skills'] = df.apply(extract_and_store_skills, axis=1)
+    return df
+
 
 # Display the DataFrame to check the new 'skills' column
 print(df_subset[["description", "skills"]])
