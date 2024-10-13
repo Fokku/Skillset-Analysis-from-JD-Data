@@ -1,6 +1,8 @@
 from dash import Dash, html, dcc, Input, Output, State
 import os
 import pandas as pd
+import html as hyper
+from urllib.parse import unquote
 
 # Import data class
 from data.data import Data
@@ -24,6 +26,7 @@ from components.Barchart import BarChart
 from components.Piechart import Piechart
 from components.WordCloud import WordCloud
 from components.Boxchart import Boxchart
+from components.API import get_skill_description, get_youtube_videos
 
 external_scripts = [
     {"src": "https://cdn.tailwindcss.com"},
@@ -41,6 +44,7 @@ app = Dash(
     __name__,
     external_scripts=external_scripts,
     external_stylesheets=external_stylesheets,
+    suppress_callback_exceptions=True
 )
 server = app.server
 
@@ -283,23 +287,27 @@ def MainSectionGeneralView():
 
 
 # Dashboard Layout
-app.layout = html.Div(
-    className="flex-1 max-h-screen p-5",
-    children=html.Div(
-        className="flex flex-1 h-screen overflow-hidden",
-        children=[
-            Sidebar(),
-            html.Main(
-                className="flex flex-col w-full h-full p-9 overflow-hidden overflow-y-scroll",
-                children=[
-                    html.Div(children=ProjectHeader()),
-                    MainSection(),
-                    MainSectionGeneralView(),
-                ],
-            ),
-        ],
-    ),
-)
+app.layout = html.Div([
+    dcc.Location(id='page-url', refresh=False), 
+        html.Div(
+        className="flex-1 max-h-screen p-5",
+        children=html.Div(
+            className="flex flex-1 h-screen overflow-hidden",
+            children=[
+                Sidebar(),
+                html.Main(
+                    className="flex flex-col w-full h-full p-9 overflow-hidden overflow-y-scroll",
+                    children=[
+                        html.Div(children=ProjectHeader()),
+                        html.Div(id='main-content'),
+                        html.Div(id='main-section'),
+                        html.Div(id='general-view'),
+                    ],
+                ),
+            ],
+        ),
+        )
+])
 
 
 # Toggle between main section and general view
@@ -505,6 +513,129 @@ def update_charts(selected_countries, selected_industries):
         [{"label": skill, "value": skill} for skill in skills_list],
     )
 
+    # Callback to display the initial page or the chart
+@app.callback(
+    Output('main-content', 'children'),
+    Input('page-url', 'pathname')  # URL tracker input
+)
+def display_page(pathname):
+
+    # Display the home page (main sections) when on '/'
+    if pathname == '/':
+        return html.Div(
+            children=[
+                MainSection(),  # Show the main sections when on home page
+                MainSectionGeneralView(),
+            ]
+        )
+
+    # Display skill details when the URL starts with '/skills/'
+    elif pathname.startswith('/skills/'):
+        # Extract skill name from the URL and decode it to handle special characters
+        skill_name_encoded = pathname.split('/skills/')[-1]
+        skill_name = unquote(skill_name_encoded).replace('-', ' ').replace('/', ' ')  # Decode URL and replace hyphens with spaces
+
+        # Check if the skill exists in the DataFrame
+        df_filtered = cleaned_data[cleaned_data["skill_name"].str.contains(skill_name, case=False, na=False)]
+
+        # If the skill does not exist, display an error message
+        if df_filtered.empty:
+            return html.Div([
+                html.H2("Skill not found"),
+                html.P(f"The skill '{skill_name}' does not exist in our data."),
+                html.P("Please check your input or go back to the home page.")
+            ])
+
+        description = get_skill_description(skill_name)
+
+        # Filter the DataFrame for rows that contain the selected skill
+        df_filtered = cleaned_data[cleaned_data["skill_name"].str.contains(skill_name, case=False, na=False)].copy()
+
+        # Convert 'listed_time' from Unix timestamp to datetime format
+        df_filtered['listed_time'] = pd.to_datetime(df_filtered['listed_time'], unit='ms')
+
+        # Extract day from 'listed_time'
+        df_filtered['day'] = df_filtered['listed_time'].dt.to_period('D')
+
+        # Group by 'day' to get job counts for each day
+        job_counts_by_day = df_filtered.groupby('day').size().reset_index(name='job_count')
+
+        print(job_counts_by_day)
+
+        # Create the Plotly line chart
+        individualSkill_over_time_fig = {
+            "data": [
+                {
+                    "x": job_counts_by_day['day'].astype(str),  # Convert PeriodIndex to string for JSON serialization
+                    "y": job_counts_by_day['job_count'],
+                    "type": "scatter",
+                    "mode": "lines",
+                    "name": skill_name,
+                    "line": {"shape": "linear", "smoothing": 0.4},
+                }
+            ],
+            "layout": {
+                "title": f"Job Postings for {skill_name} Over Time (Daily)",
+                "xaxis": {
+                    "title": "Date",
+                    "tickformat": "%Y-%m-%d",  # Tick format adjusted for day level
+                    "tickangle": 45,
+                },
+                "yaxis": {"title": "Job Postings"},
+                "legend": {"orientation": "h", "y": -0.2},
+                "hovermode": "closest",
+                "margin": {"b": 100, "t": 30, "l": 60, "r": 30},
+            },
+        
+        }
+        videos = get_youtube_videos(skill_name)
+
+        # Convert video titles and URLs
+        video_links = [
+            html.Div([
+                # Convert HTML entities in the title using html.unescape()
+                html.A(
+                    hyper.unescape(video['snippet']['title']),
+                    href=f"https://www.youtube.com/watch?v={video['id']['videoId']}",
+                    target="_blank",
+                    className="text-blue-600 hover:text-blue-800 underline hover:underline font-bold"
+                ),
+                html.Br()  # Adds spacing between links
+            ]) for video in videos
+        ]
+
+        # Display the skill description and the line chart
+        return html.Div([
+            html.H2(f'Skill Details: {skill_name.title()}'),
+            html.P(description),  # Display description
+            dcc.Graph(figure=individualSkill_over_time_fig),  # Deserialize and display the line chart using plotly.io
+            html.H3("Related YouTube Courses", className="mt-8 text-lg font-semibold"),  # Section title for videos
+            html.Div(video_links, className="pt-5 space-y-2")  # Display video links with some top padding and spacing between links
+        ])
+
+
+
+    # Show a 404 page if no valid route matches
+    else:
+        return html.Div([
+            html.H2("404 - Page not found"),
+            html.P("The page you are looking for does not exist.")
+        ])
+
+
+# Callback to handle bar click event and change the URL
+@app.callback(
+    Output('page-url', 'pathname'),  # Change the URL on click
+    Input('top-skills-barchart', 'clickData')  # Input from clicking a bar
+)
+def on_bar_click(click_data):
+    if click_data:  # When a bar is clicked
+        clicked_skill = click_data['points'][0]['x']  # Get the clicked skill name
+        # Redirect to a page related to that skill
+        return f'/skills/{clicked_skill}'
+    return '/'  # Default home page
+
+
 # TODO: Fix sidebar toggle
 
 # @app.callback(
@@ -521,4 +652,4 @@ def update_charts(selected_countries, selected_industries):
 if os.environ.get("ENV") == "dev":
     app.run(debug=True, port=8000)
 else:
-    app.run(debug=False, host="0.0.0.0", port=8000)
+    app.run(debug=False, host="127.1.0.0", port=8000)
