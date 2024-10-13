@@ -25,6 +25,7 @@ from components.MultiLineChart import MultiLineChart, InteractiveMultiLineChart
 from components.Barchart import BarChart
 from components.Piechart import Piechart
 from components.WordCloud import WordCloud
+from components.WordCloudFilter import WordCloudLayout # NEED TO 'pip install wordcloud' to use this
 from components.Boxchart import Boxchart
 from components.API import get_skill_description, get_youtube_videos
 
@@ -89,6 +90,7 @@ def MainSection():
                     ),
                     BarChart(Title="Distribution of Employment Types", id="employment-types-bar"),
                     Piechart(Title="Remote vs Onsite Positions", id="remote-vs-onsite-pie"),
+                    WordCloudLayout(Title="Most Skill Needed", id="wordcloud"),
                 ],
             ),
         ],
@@ -255,11 +257,6 @@ def MainSectionGeneralView():
                             }
                         },
                     ),
-                    # WordCloud(
-                    #     data=cleaned_data['skill_name'].value_counts().nlargest(100).to_dict(),
-                    #     Title="Most In-Demand Skills",
-                    #     id="most-skills-wordcloud",
-                    # ),
                     Boxchart(
                         id="salary-distribution-job-roles",
                         description="Distribution of salaries by top 10 job roles",
@@ -279,6 +276,11 @@ def MainSectionGeneralView():
                                 'showlegend': False
                             }
                         },
+                    ),
+                    WordCloud(
+                        data=cleaned_data['skill_name'].value_counts().nlargest(100).to_dict(),
+                        Title="Most In-Demand Skills",
+                        id="most-skills-wordcloud",
                     ),
                 ],
             )
@@ -635,6 +637,21 @@ def on_bar_click(click_data):
         return f'/skills/{clicked_skill}'
     return '/'  # Default home page
 
+# Update wordcloud
+@app.callback(
+    Output("wordcloud", "children"),
+    [Input("industry-filter", "value")],
+)
+
+def update_wordcloud(selected_industries):
+    # Get the skill frequencies from the Data class based on selected industries
+    if selected_industries:
+        skill_frequencies = data.get_skill_frequencies(selected_industries)
+    else:
+        skill_frequencies = None  # No industries selected
+
+    # Generate and return the WordCloud layout (handles both cases)
+    return WordCloudLayout(skill_frequencies, id="wordcloud")
 
 # TODO: Fix sidebar toggle
 
