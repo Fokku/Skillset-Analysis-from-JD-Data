@@ -653,20 +653,8 @@ def update_wordcloud(selected_industries):
     # Generate and return the WordCloud layout (handles both cases)
     return WordCloudLayout(skill_frequencies, id="wordcloud")
 
-# TODO: Fix sidebar toggle
-
-# @app.callback(
-#     [Output("sidebar", "className")],
-#     [Input("toggle-sidebar-button", "n_clicks")],
-# )
-# def toggle_sidebar(n_clicks):
-#     if n_clicks:
-#         return ["hidden"]
-#     else:
-#         return ["flex"]
-
 # Run the app
 if os.environ.get("ENV") == "dev":
     app.run(debug=True, port=8000)
 else:
-    app.run(debug=False, host="127.1.0.0", port=8000)
+    app.run(debug=False, host="0.0.0.0", port=8000)
